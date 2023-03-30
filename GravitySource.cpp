@@ -6,8 +6,8 @@ GravitySource::GravitySource(float pos_x, float pos_y, float strength) {
     this->strength = strength;
 
     source.setPosition(position);
-    source.setFillColor(sf::Color::White);
-    source.setRadius(4);
+    source.setFillColor(sf::Color::Yellow);
+    source.setRadius(10);
 }
 
 void GravitySource::render(sf::RenderWindow& window) {
