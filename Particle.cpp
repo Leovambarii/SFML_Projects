@@ -1,4 +1,4 @@
-#include "Particle.h"
+#include "Particle.hpp"
 
 Particle::Particle(float pos_x, float pos_y, float velocity_x, float velocity_y, sf::Color color) {
     position.x = pos_x;

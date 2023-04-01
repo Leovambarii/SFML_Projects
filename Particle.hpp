@@ -1,9 +1,8 @@
-#ifndef PARTICLE_H
-#define PARTICLE_H
+#ifndef PARTICLE_HP
+#define PARTICLE_HP
 
-#include <SFML/Graphics.hpp>
 #include <math.h>
-#include "GravitySource.h"
+#include "GravitySource.hpp"
 
 class Particle {
 private:
