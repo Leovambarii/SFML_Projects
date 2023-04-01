@@ -9,10 +9,11 @@ class Particle {
 private:
     sf::Vector2f position;
     sf::Vector2f velocity;
-    sf::CircleShape source;
+    sf::Color particle_color;
+    sf::CircleShape particle_shape;
 
 public:
-    Particle(float pos_x, float pos_y, float velocity_x, float velocity_y);
+    Particle(float pos_x, float pos_y, float velocity_x, float velocity_y, sf::Color color);
 
     void render(sf::RenderWindow& window);
 

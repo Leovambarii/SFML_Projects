@@ -1,52 +1,65 @@
-#include <SFML/Graphics.hpp>
+// #include <SFML/Graphics.hpp>
 #include "GravitySource.h"
 #include "Particle.h"
 #include <vector>
-#include <cstdlib>
+#include <cstdlib>  // for rand() and srand()
+#include <ctime>    // for time()
 
 #define SEED 5
-// To compile: g++ main.cpp GravitySource.cpp Particle.cpp -o sfml-app -lsfml-graphics -lsfml-window -lsfml-system
+#define FPS_LIMIT 60
+// To compile: g++ main.cpp Particle.cpp GravitySource.cpp -o main -lsfml-graphics -lsfml-window -lsfml-system
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(1600, 1000), "GRAVITY PROJECT");    // Window initialization
-    window.setFramerateLimit(60);
+    window.setFramerateLimit(FPS_LIMIT);    // Settinf fps limit
 
-    GravitySource source(800, 500, 7000);
+    srand(time(nullptr)); // Creating seed for random generator
 
-    std::vector<Particle> particles;
-    particles.push_back(Particle(600, 700, 6, 0));
-    particles.push_back(Particle(800, 300, 4, 0));
-    for (int i=0; i<5; i++) {
-        particles.push_back(Particle(rand() % 1500, rand() % 900, rand()%5+1, rand()%5));
-    }
+    GravitySource source(800, 500, 7000);   // Creating gravity source
+
+    std::vector<Particle> particles;    // Vector for storing particles
 
     bool pause = false;
-    bool spacePressed = false;
+    // TODO colisions
+    // TODO movement trace
+    // TODO deletion of particle on hit with the source
 
     while (window.isOpen()) {   // Loop with open window
         sf::Event event;    // Initializing event object
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
+            if (event.type == sf::Event::Closed)    // Closing window event
                 window.close();
-            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+            else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {   // Closing window event
                 window.close();
-            else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space && !spacePressed) {
-                spacePressed = true;
+            } else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) {  // Pausing the simulation
                 pause = !pause;
-            } else if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Space)
-                spacePressed = false;
+            } else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::C) {  // Clearing particles
+                particles.clear();
+            } else if (event.type == sf::Event::MouseButtonPressed) {   // Adding particle with a mouse event
+                sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+                sf::Color color = sf::Color(rand()%256, rand()%256, rand()%256);
+                sf::Vector2f velocity(rand()%5, rand()%5);
+                if (event.mouseButton.button == sf::Mouse::Left) {  // Adding single particle
+                    particles.push_back(Particle(mousePosition.x, mousePosition.y, velocity.x, velocity.y, color));
+                } else if (event.mouseButton.button == sf::Mouse::Right) {  // Adding multiple particles
+                    particles.push_back(Particle(mousePosition.x, mousePosition.y, velocity.x, velocity.y, color));
+                    particles.push_back(Particle(mousePosition.x+rand()%15+1, mousePosition.y+rand()%15+1, velocity.x, velocity.y, color));
+                    particles.push_back(Particle(mousePosition.x+rand()%15+1, mousePosition.y-rand()%15+1, velocity.x, velocity.y, color));
+                    particles.push_back(Particle(mousePosition.x-rand()%15+1, mousePosition.y+rand()%15+1, velocity.x, velocity.y, color));
+                    particles.push_back(Particle(mousePosition.x-rand()%15+1, mousePosition.y-rand()%15+1, velocity.x, velocity.y, color));
+                }
+            }
         }
-
 
         window.clear(); // Clearing the window
 
-        if (!pause) {
+        if (!pause) {   // Updating particle physics when simulation is not paused
             for (Particle& p : particles)
                 p.update_physics(source);
         }
-        source.render(window);
+        source.render(window);  // Rendering the source
 
-        for (Particle p : particles)
+        for (Particle p : particles)    // Rendering particles
             p.render(window);
 
         window.display();   // Display

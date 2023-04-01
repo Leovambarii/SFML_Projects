@@ -1,20 +1,22 @@
 #include "Particle.h"
 
-Particle::Particle(float pos_x, float pos_y, float velocity_x, float velocity_y) {
+Particle::Particle(float pos_x, float pos_y, float velocity_x, float velocity_y, sf::Color color) {
     position.x = pos_x;
     position.y = pos_y;
 
     velocity.x = velocity_x;
     velocity.y = velocity_y;
 
-    source.setPosition(position);
-    source.setFillColor(sf::Color::White);
-    source.setRadius(4);
+    particle_color = color;
+
+    particle_shape.setPosition(position);
+    particle_shape.setFillColor(color);
+    particle_shape.setRadius(2);
 }
 
 void Particle::render(sf::RenderWindow& window) {
-        source.setPosition(position);
-        window.draw(source);
+        particle_shape.setPosition(position);
+        window.draw(particle_shape);
     }
 
 void Particle::update_physics(GravitySource &source) {
