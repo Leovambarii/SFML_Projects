@@ -64,16 +64,6 @@ void GravityProject::update() {
     }
 }
 
-// Render simualtion graphics
-void GravityProject::render() {
-    mWindow.clear();
-    mSource.render(mWindow);
-    for (Particle p : mParticles) {
-        p.render(mWindow);
-    }
-    mWindow.display();
-}
-
 // Check for particle colisions with the gravity source
 void GravityProject::check_collisions() {
     for (auto it = mParticles.begin(); it != mParticles.end();) {
@@ -83,4 +73,14 @@ void GravityProject::check_collisions() {
         }
         ++it;
     }
+}
+
+// Render simualtion graphics
+void GravityProject::render() {
+    mWindow.clear();
+    mSource.render(mWindow);
+    for (Particle p : mParticles) {
+        p.render(mWindow);
+    }
+    mWindow.display();
 }

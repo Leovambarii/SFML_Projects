@@ -14,7 +14,7 @@
 #define WINDOW_HEIGHT 1000
 #define STRENGTH 10000
 #define SOURCE_RADIUS 20
-#define PARTICLE_RADIUS 3
+#define PARTICLE_RADIUS 5
 
 class GravityProject {
 public:

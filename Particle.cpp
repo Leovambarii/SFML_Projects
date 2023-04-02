@@ -16,9 +16,10 @@ Particle::Particle(float pos_x, float pos_y, float velocity_x, float velocity_y,
 }
 
 // Renders the Particle object to a given RenderWindow object
-    void Particle::render(sf::RenderWindow& window) {
+    void Particle::render(sf::RenderWindow &window) {
     particle_shape.setPosition(position);
     window.draw(particle_shape);
+    draw_particle_trajectory(window);
 }
 
 // Updates the Particle object's physics based on the gravitational influence of a GravitySource object
@@ -41,8 +42,9 @@ void Particle::update_physics(GravitySource &source) {
     velocity.x += acceleration_x; // Updating the velocity for x
     velocity.y += acceleration_y; // Updating the velocity for y
 
-    position.x += velocity.x; // Updating the position for x
-    position.y += velocity.y; // Updating the position for y
+    position += velocity; // Updating the position
+
+    trajectory_trace.push_back(position); // Add new postion to the trajectory trace vector
 }
 
 // Method that returns the postion vector of the particle
@@ -69,5 +71,24 @@ bool Particle::check_source_collision(GravitySource &source) {
 
     float distance = sqrt(distance_x*distance_x + distance_y*distance_y); // Calculating distance between particle and source
 
-    return distance <= source_radius*2;
+    return distance <= source_radius*1.5f;
+}
+
+// Draw the trajectory trace
+void Particle::draw_particle_trajectory(sf::RenderWindow& window) {
+    // Only keep the last 5 and current position in the trajectory trace vector
+    while (trajectory_trace.size() > TRACE_SIZE) {
+        trajectory_trace.erase(trajectory_trace.begin());
+    }
+
+    if (trajectory_trace.size() > 3) {
+        // Draw lines connecting the points in the trajectory trace vector
+        for (size_t i=0; i < trajectory_trace.size()-2; i++) {
+            sf::Vertex line[] = {
+                sf::Vertex(trajectory_trace[i], particle_color),
+                sf::Vertex(trajectory_trace[i + 1], particle_color)
+            };
+            window.draw(line, 2, sf::Lines);
+        }
+    }
 }
