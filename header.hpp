@@ -12,6 +12,9 @@
 #define FPS_LIMIT 60
 #define WINDOW_WIDTH 1600
 #define WINDOW_HEIGHT 1000
+#define STRENGTH 10000
+#define SOURCE_RADIUS 20
+#define PARTICLE_RADIUS 3
 
 class GravityProject {
 public:
@@ -21,6 +24,7 @@ private:
     void processEvents();
     void update();
     void render();
+    void check_collisions();
 
     sf::RenderWindow mWindow;
     GravitySource mSource;
