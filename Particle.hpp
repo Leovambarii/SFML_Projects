@@ -5,6 +5,7 @@
 #include "GravitySource.hpp"
 
 #define TRACE_SIZE 100
+#define TRACE true
 
 class Particle {
 private:

@@ -5,7 +5,3 @@ int main() {
     project.run();
     return 0;
 }
-
-// TODO trajectory trace
-// TODO improve deletion of particle upon contact with gravity source
-// TODO colisions

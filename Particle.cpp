@@ -19,7 +19,8 @@ Particle::Particle(float pos_x, float pos_y, float velocity_x, float velocity_y,
     void Particle::render(sf::RenderWindow &window) {
     particle_shape.setPosition(position);
     window.draw(particle_shape);
-    draw_particle_trajectory(window);
+    if (TRACE == true)
+        draw_particle_trajectory(window);
 }
 
 // Updates the Particle object's physics based on the gravitational influence of a GravitySource object
@@ -44,7 +45,8 @@ void Particle::update_physics(GravitySource &source) {
 
     position += velocity; // Updating the position
 
-    trajectory_trace.push_back(position); // Add new postion to the trajectory trace vector
+    if (TRACE == true)
+        trajectory_trace.push_back(position); // Add new postion to the trajectory trace vector
 }
 
 // Method that returns the postion vector of the particle
@@ -71,7 +73,7 @@ bool Particle::check_source_collision(GravitySource &source) {
 
     float distance = sqrt(distance_x*distance_x + distance_y*distance_y); // Calculating distance between particle and source
 
-    return distance <= source_radius*1.5f;
+    return distance <= source_radius*1.1f;
 }
 
 // Draw the trajectory trace
