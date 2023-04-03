@@ -24,8 +24,8 @@ public:
 private:
     void processEvents();
     void update();
-    void render();
     void check_collisions();
+    void render();
 
     // Targeted window for drawing elements
     sf::RenderWindow mWindow;
