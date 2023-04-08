@@ -8,9 +8,10 @@
 
 #define SEED 5 // Seed for srand generation
 #define FPS_LIMIT 60 // Frames per second limit
-#define WINDOW_WIDTH 500 // Width of the simulation window
-#define WINDOW_HEIGHT 500 // Height of the simulation window
-#define STRENGTH 5000 // Strength of the gravity source
+#define WINDOW_WIDTH 700 // Width of the simulation window
+#define WINDOW_HEIGHT 700 // Height of the simulation window
+#define OUTLINE_THICKNESS 5 // Thickness of outlines between rectangles
+#define SCORE_RADIUS WINDOW_WIDTH*0.10  // Radius of circle behind score
 
 class MemoryGameProject {
 public:
