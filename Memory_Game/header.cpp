@@ -3,14 +3,14 @@
 // --- Block ---
 
 // Constructor for Block class
-Block::Block(sf::Vector2f size, sf::Color color, float thickness, sf::Vector2f position) {
+Block::Block(sf::Vector2f size, sf::Color color, float thickness, sf::Vector2f position) :
+color(color)
+{
     block_shape.setSize(size);
     block_shape.setFillColor(color);
     block_shape.setOutlineColor(sf::Color::Black);
     block_shape.setOutlineThickness(thickness);
     block_shape.setPosition(position);
-
-    color = color;
 
     active_color = alterColor(color, COLOR_CHANGE_FACTOR);
 }
@@ -21,11 +21,24 @@ void Block::render(sf::RenderWindow &window) {
 }
 
 // Toggle color to active/inactive
-void Block::toggleActiveColor(bool active=false) {
-    if (active)
+void Block::toggleBlockColor() {
+    sf::Color currentColor = block_shape.getFillColor();
+    if (currentColor == color) {
         block_shape.setFillColor(active_color);
-    else
+        sf::Color active_color = block_shape.getFillColor();
+        float r = static_cast<float>(active_color.r);
+        float g = static_cast<float>(active_color.g);
+        float b = static_cast<float>(active_color.b);
+        std::cout << "active color:" << ' ' << r << ' '<< g << ' ' << b << std::endl;
+    }
+    else if (currentColor == active_color) {
         block_shape.setFillColor(color);
+        sf::Color inactive_color = block_shape.getFillColor();
+        float r = static_cast<float>(inactive_color.r);
+        float g = static_cast<float>(inactive_color.g);
+        float b = static_cast<float>(inactive_color.b);
+        std::cout << "normal color:" << ' ' << r << ' '<< g << ' ' << b << std::endl;
+    }
 }
 
 // Function for creating a similar color with altered brightness
@@ -55,8 +68,8 @@ sf::Color Block::alterColor(sf::Color color, float factor) {
 MemoryGameProject::MemoryGameProject() :
     // Initialize window with specified width, height, and title
     mWindow(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "MEMORY GAME", sf::Style::Titlebar | sf::Style::Close),
-    current_score(0),
-    block_idx(0),
+    current_level(1),
+    step_idx(0),
     display_path(true)
 {
     // Set the maximum framerate of the window
@@ -77,19 +90,18 @@ MemoryGameProject::MemoryGameProject() :
     // Create four Block objects
     createBlocks();
 
-    // Add first step of blocks order path
-    addStep();
+    // Generate all steps for the game
+    createStepsPath();
+
+    for (auto &x : mSteps)
+        std::cout << x << " ";
+    std::cout << std::endl;
 }
 
 // Main simualtion loop
 void MemoryGameProject::run() {
     while (mWindow.isOpen()) {
-        std::cout << "Processing" << std::endl;
-        processEvents(); // Handle input events
-        std::cout << "Updating" << std::endl;
-        update(); // Update game state
-        std::cout << "Rendering" << std::endl;
-        render(); // Render simualtion graphics
+        renderPath(); // Update game state and render graphics
     }
 }
 
@@ -104,50 +116,54 @@ void MemoryGameProject::processEvents() {
         else if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && !display_path) { // If user clicks the left button on mouse
             sf::Vector2i mousePosition = sf::Mouse::getPosition(mWindow); // Get mouse position relative to the window
             int clickedBlock = checkClick(mousePosition); // Check what block was clicked
-            if (!isCorrectBlock(clickedBlock)) { // Close window if incorrect block was clicked
+            // Check whether correct block was clicked
+            if (isCorrectBlock(clickedBlock))
+                step_idx++;
+            else {
+                std::cout << "Incorrect!" << std::endl;
                 mWindow.close();
             }
         }
     }
 }
 
-// Update game state
-void MemoryGameProject::update() { // TODO fix this to render without segmentation fault
+// Update game state and render graphics
+void MemoryGameProject::renderPath() {
     if (display_path) {
-        if (block_idx > current_score) {
-            display_path = !display_path;
-            block_idx = 0;
-        } else
-            block_idx++;
+        for (int i=0; i<current_level; i++)
+            renderStep(i);
+        display_path = !display_path;
+        std::cout << "Now repeat!" << std::endl;
     } else {
-        if (block_idx > current_score) {
+        // renderBlocks();
+        if (step_idx >= current_level) {
             display_path = !display_path;
-            block_idx = 0;
-        } else {
-            addStep();  // TODO add function for checking clicked order sequence
-            block_idx++;
-        }
+            step_idx = 0;
+            current_level++;
+            if (current_level == LEVELS_AMOUNT) {
+                std::cout << "-----+++ CONGRATULATIONS! YOU WIN! +++-----" << std::endl;
+                mWindow.close();
+            }
+        } else
+            processEvents();
     }
 }
 
-// Render game graphics
-void MemoryGameProject::render() {  // TODO fix this to render without segmentation fault
+// Render game step
+void MemoryGameProject::renderStep(int step) {
     mWindow.clear();
-    std::cout << 1 << std::endl;
-    if (display_path)
-        mBlocks[mOrder[block_idx-1]].toggleActiveColor(true);
-    std::cout << 2 << std::endl;
-    for (Block b : mBlocks)
+    mBlocks[mSteps[step]].toggleBlockColor();
+    for (Block& b : mBlocks)
         b.render(mWindow);
-    std::cout << 3 << std::endl;
     mWindow.display();
-    std::cout << 4 << std::endl;
-    if (display_path) {
-        // Pause for given time before rendering the next frame during path display
-        sf::sleep(sf::seconds(PAUSE_TIME));
-        mBlocks[mOrder[block_idx-1]].toggleActiveColor(false);
-    }
-    std::cout << 5 << std::endl;
+    // Pause for given time before rendering the next frame during path display
+    sf::sleep(sf::seconds(PAUSE_TIME));
+    mWindow.clear();
+    mBlocks[mSteps[step]].toggleBlockColor();
+    for (Block& b : mBlocks)
+        b.render(mWindow);
+    mWindow.display();
+    sf::sleep(sf::seconds(0.2f));
 }
 
 // Create four Block objects
@@ -166,8 +182,9 @@ void MemoryGameProject::createBlocks() {
 }
 
 // Add another step to current game
-void MemoryGameProject::addStep() {
-    mOrder.push_back(rand() % mBlocks.size());
+void MemoryGameProject::createStepsPath() {
+    for (int i=0; i<LEVELS_AMOUNT; i++)
+        mSteps.push_back(rand() % mBlocks.size());
 }
 
 // Check what block was clicked
@@ -176,9 +193,9 @@ int MemoryGameProject::checkClick(sf::Vector2i mousePosition) {
     int y = mousePosition.y;
     if (x < BLOCK_WIDTH && y < BLOCK_HEIGHT)
         return 0;
-    if (x >= BLOCK_WIDTH && y < BLOCK_HEIGHT)
+    else if (x >= BLOCK_WIDTH && y < BLOCK_HEIGHT)
         return 1;
-    if (x < BLOCK_WIDTH && y >= BLOCK_HEIGHT)
+    else if (x < BLOCK_WIDTH && y >= BLOCK_HEIGHT)
         return 2;
     else
         return 3;
@@ -186,7 +203,7 @@ int MemoryGameProject::checkClick(sf::Vector2i mousePosition) {
 
 // Check if correct block was clicked
 bool MemoryGameProject::isCorrectBlock(int clickedBlock) {
-    if (clickedBlock == mOrder[block_idx])
+    if (clickedBlock == mSteps[step_idx])
         return true;
     else
         return false;

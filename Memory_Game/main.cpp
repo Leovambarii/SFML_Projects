@@ -5,3 +5,7 @@ int main() {
     project.run();
     return 0;
 }
+
+// TODO add score
+// TODO add correct step by step generation after sucessful level
+// TODO add sounds when the given block path is displayed and clicked

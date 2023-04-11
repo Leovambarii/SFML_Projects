@@ -16,12 +16,13 @@
 #define SCORE_RADIUS WINDOW_WIDTH*0.10  // Radius of circle behind score
 #define COLOR_CHANGE_FACTOR 3.0 // Factor of color being darker when it is active
 #define PAUSE_TIME 1.0f // Amount of seconds to wait between showing each step path
+#define LEVELS_AMOUNT 100 // Maximum amout of steps in generated path
 
 class Block {
 public:
     Block(sf::Vector2f size, sf::Color color, float thickness, sf::Vector2f position);
     void render(sf::RenderWindow& window);
-    void toggleActiveColor(bool active);
+    void toggleBlockColor();
 
 private:
     sf::RectangleShape block_shape;
@@ -36,15 +37,15 @@ public:
     MemoryGameProject();
     void run();
 private:
-    unsigned int current_score;
-    unsigned int block_idx;
+    unsigned int current_level;
+    unsigned int step_idx;
     bool display_path;
 
     void processEvents();
-    void update();
-    void render();
+    void renderPath();
+    void renderStep(int step);
     void createBlocks();
-    void addStep();
+    void createStepsPath();
     int checkClick(sf::Vector2i mousePosition);
     bool isCorrectBlock(int clickedBlock);
 
@@ -52,7 +53,7 @@ private:
     sf::RenderWindow mWindow;
 
     // Vector that is storing blocks order
-    std::vector<int> mOrder;
+    std::vector<int> mSteps;
 
     // Vector that is storing blocks
     std::vector<Block> mBlocks;
