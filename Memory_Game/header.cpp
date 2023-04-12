@@ -1,34 +1,33 @@
 #include "header.hpp"
 
-// --- Block ---
+// This is the implementation of the Block class that is used in the MemoryGameProject.
 
-// Constructor for Block class
 Block::Block(sf::Vector2f size, sf::Color color, float thickness, sf::Vector2f position) :
 color(color)
 {
+    // Initialize the properties of the block shape
     block_shape.setSize(size);
     block_shape.setFillColor(color);
     block_shape.setOutlineColor(sf::Color::Black);
     block_shape.setOutlineThickness(thickness);
     block_shape.setPosition(position);
 
+    // Compute the new color with altered brightness
     active_color = alterColor(color, COLOR_CHANGE_FACTOR);
 }
 
-// Renders the Block object to a given RenderWindow object
 void Block::render(sf::RenderWindow &window) {
     window.draw(block_shape);
 }
 
-// Toggle color to active/inactive
 void Block::toggleBlockColor() {
+    // Check if the current color is the normal color
     if (block_shape.getFillColor() == color)
         block_shape.setFillColor(active_color);
     else
         block_shape.setFillColor(color);
 }
 
-// Function for creating a similar color with altered brightness
 sf::Color Block::alterColor(sf::Color color, float factor) {
     // Get the RGB values of the color
     float red = static_cast<float>(color.r);
@@ -49,7 +48,7 @@ sf::Color Block::alterColor(sf::Color color, float factor) {
     return sf::Color(static_cast<sf::Uint8>(red), static_cast<sf::Uint8>(green), static_cast<sf::Uint8>(blue), color.a);
 }
 
-// --- Score ---
+// This is the implementation of the Score class that is used in the MemoryGameProject.
 
 Score::Score(float radius, float thickness, sf::Vector2f position) :
 current_level(1),
@@ -57,6 +56,7 @@ color(sf::Color::Cyan),
 render_path_color(sf::Color::Magenta),
 scoreFont()
 {
+    // Initialize the properties of the score shape
     score_shape.setRadius(radius);
     score_shape.setFillColor(color);
     score_shape.setOutlineColor(sf::Color::Black);
@@ -68,6 +68,8 @@ scoreFont()
         std::cout << "ERROR FONT FILE" << std::endl;
         exit(1);
     }
+
+    // Initialize the properties of the score text
     scoreText.setFont(scoreFont);
     scoreText.setString(std::to_string(current_level));
     scoreText.setCharacterSize(FONT_SIZE);
@@ -76,29 +78,27 @@ scoreFont()
     centerScore();
 }
 
-// Renders the Score object to a given RenderWindow object
 void Score::render(sf::RenderWindow &window) {
     window.draw(score_shape);
     window.draw(scoreText);
 }
 
-// Changes score circle fill color depending on event case
 void Score::toggleScoreColor(bool render_path_state) {
+    // Check if the there is a block path rendered currently
     if (render_path_state)
         score_shape.setFillColor(render_path_color);
     else
         score_shape.setFillColor(color);
 }
 
-// Update score level
 void Score::updateScore() {
     current_level++;
     scoreText.setString(std::to_string(current_level));
 
+    // Check for milestone levels and center text in case of getting a new digit
     const std::vector<int> milestoneLevels = {10, 100, 1000};
-    if (std::find(milestoneLevels.begin(), milestoneLevels.end(), current_level) != milestoneLevels.end()) {
+    if (std::find(milestoneLevels.begin(), milestoneLevels.end(), current_level) != milestoneLevels.end())
         centerScore();
-    }
 }
 
 sf::Vector2f Score::getPosition() {
@@ -112,9 +112,8 @@ void Score::centerScore() {
     scoreText.setPosition(sf::Vector2f(BLOCK_WIDTH, BLOCK_HEIGHT));
 }
 
-// --- MemoryGameProject ---
+// This is the implementation of the MemoryGameProject class
 
-// Constructor for MemoryGameProject class
 MemoryGameProject::MemoryGameProject() :
     // Initialize window with specified width, height, and title
     mWindow(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "MEMORY GAME", sf::Style::Titlebar | sf::Style::Close),
@@ -124,6 +123,7 @@ MemoryGameProject::MemoryGameProject() :
 {
     // Set the maximum framerate of the window
     mWindow.setFramerateLimit(FPS_LIMIT);
+
     // get the screen resolution
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 
@@ -137,41 +137,36 @@ MemoryGameProject::MemoryGameProject() :
     // Seed the random number generator with the current time
     srand(time(nullptr));
 
-    // Create four Block objects
     createBlocks();
-
-    // Generate all steps for the game
     addStepPath();
-
-    // Load sounds
     loadSounds();
 }
 
-// Main simualtion loop
 void MemoryGameProject::run() {
+    // Render initial block and wait a certain amount of time before starting the game
     for (Block& b : mBlocks)
         b.render(mWindow);
     score.render(mWindow);
     mWindow.display();
     sf::sleep(sf::seconds(3.0));
     while (mWindow.isOpen()) {
-        renderPath(); // Update game state and render graphics
+        renderPath();
     }
 }
 
-// Handle input events
 void MemoryGameProject::processEvents() {
     sf::Event event;
-    while (mWindow.pollEvent(event)) { // Process events in the event queue
-        if (event.type == sf::Event::Closed) // If user closes the window
-            mWindow.close(); // Close the window
-        else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) // If user presses Esc key
-            mWindow.close(); // Close the window
-        else if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && !display_path) { // If user clicks the left button on mouse
+
+    // Process events in the event queue
+    while (mWindow.pollEvent(event)) {
+        if (event.type == sf::Event::Closed)
+            mWindow.close();
+        else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
+            mWindow.close();
+        else if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && !display_path) { // If user clicks the left button on mouse and currently game awaits for user to click
             sf::Vector2i mousePosition = sf::Mouse::getPosition(mWindow); // Get mouse position relative to the window
-            int clickedBlock = checkClick(mousePosition); // Check what block was clicked
+            int clickedBlock = checkClick(mousePosition);
             playSound(clickedBlock);
-            // Check whether correct block was clicked
             if (isCorrectBlock(clickedBlock))
                 step_idx++;
             else {
@@ -182,14 +177,16 @@ void MemoryGameProject::processEvents() {
     }
 }
 
-// Update game state and render graphics
 void MemoryGameProject::renderPath() {
     if (display_path) {
+        // Display current block sequence
         score.toggleScoreColor(true);
         for (int i=0; i<score.current_level; i++)
             renderStep(i);
         display_path = !display_path;
+
     } else {
+        // Await for correct user inputs
         if (step_idx >= score.current_level) {
             nextLevel();
         } else
@@ -197,7 +194,6 @@ void MemoryGameProject::renderPath() {
     }
 }
 
-// Creating next level
 void MemoryGameProject::nextLevel() {
     display_path = !display_path;
     step_idx = 0;
@@ -206,8 +202,8 @@ void MemoryGameProject::nextLevel() {
     sf::sleep(sf::seconds(2.0));
 }
 
-// Render game step
 void MemoryGameProject::renderStep(int step) {
+    // Render block colors with one currently active step
     mWindow.clear();
     mBlocks[mSteps[step]].toggleBlockColor();
     for (Block& b : mBlocks)
@@ -215,8 +211,11 @@ void MemoryGameProject::renderStep(int step) {
     score.render(mWindow);
     mWindow.display();
     playSound(mSteps[step]);
+
     // Pause for given time before rendering the next frame during path display
     sf::sleep(sf::seconds(PAUSE_TIME));
+
+    // Render all normal block colors and sleep for a brief amount of time to make clearer pauses
     mWindow.clear();
     mBlocks[mSteps[step]].toggleBlockColor();
     for (Block& b : mBlocks)
@@ -225,10 +224,10 @@ void MemoryGameProject::renderStep(int step) {
         score.toggleScoreColor(false);
     score.render(mWindow);
     mWindow.display();
+
     sf::sleep(sf::seconds(0.2f));
 }
 
-// Create four Block objects
 void MemoryGameProject::createBlocks() {
     float a = BLOCK_WIDTH - OUTLINE_THICKNESS;
     float b = BLOCK_HEIGHT - OUTLINE_THICKNESS;
@@ -243,8 +242,8 @@ void MemoryGameProject::createBlocks() {
     mBlocks.push_back(Block(sf::Vector2f(a, b-OUTLINE_THICKNESS), sf::Color::Blue, OUTLINE_THICKNESS, sf::Vector2f(a+OUTLINE_THICKNESS, b+2*OUTLINE_THICKNESS)));
 }
 
-// Load sound samples from Sounds folder
 void MemoryGameProject::loadSounds() {
+    // Load all sounds for each block
     for (int i=0; i < mBlocks.size(); i++) {
         std::string filename = "Sounds/simonSound" + std::to_string(i) + ".wav";
         sf::SoundBuffer buffer;
@@ -252,26 +251,26 @@ void MemoryGameProject::loadSounds() {
             std::cout << "ERROR SOUND FILE" << std::endl;
             exit(1);
         }
-        mSoundBuffers.push_back(buffer); // Store the sound buffer in a vector
-        mSounds.push_back(sf::Sound()); // Create the sound
+
+        // Create and store new sound buffer and sound in a corresponding vectors
+        mSoundBuffers.push_back(buffer);
+        mSounds.push_back(sf::Sound());
     }
 }
 
-// Play sound of given block
 void MemoryGameProject::playSound(int block) {
     mSounds[block].setBuffer(mSoundBuffers[block]);
     mSounds[block].play();
 }
 
-// Add another step to current game
 void MemoryGameProject::addStepPath() {
     mSteps.push_back(rand() % mBlocks.size());
 }
 
-// Check what block was clicked
 int MemoryGameProject::checkClick(sf::Vector2i mousePosition) {
     int x = mousePosition.x;
     int y = mousePosition.y;
+
     if (x < BLOCK_WIDTH && y < BLOCK_HEIGHT)
         return 0;
     else if (x >= BLOCK_WIDTH && y < BLOCK_HEIGHT)
@@ -282,7 +281,6 @@ int MemoryGameProject::checkClick(sf::Vector2i mousePosition) {
         return 3;
 }
 
-// Check if correct block was clicked
 bool MemoryGameProject::isCorrectBlock(int clickedBlock) {
     if (clickedBlock == mSteps[step_idx])
         return true;

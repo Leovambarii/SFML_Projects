@@ -5,6 +5,3 @@ int main() {
     project.run();
     return 0;
 }
-
-// TODO add score text
-// TODO fix sounds
