@@ -78,10 +78,20 @@ MemoryGameProject::MemoryGameProject() :
     createBlocks();
 
     // Generate all steps for the game
-    createStepsPath();
+    addStepPath();
 
     // Load sounds
     loadSounds();
+}
+
+// Destructor for MemoryGameProject class
+MemoryGameProject::~MemoryGameProject() {
+    // Free all dynamically allocated resources
+    // None
+    // Free sounds
+    for (auto& sound : mSounds) {
+        sound.~SoundBuffer();
+    }
 }
 
 // Main simualtion loop
@@ -123,18 +133,19 @@ void MemoryGameProject::renderPath() {
         std::cout << "Now repeat!" << std::endl;
     } else {
         if (step_idx >= current_level) {
-
-            display_path = !display_path;
-            step_idx = 0;
-            current_level++;
-            sf::sleep(sf::seconds(2.0));
-            if (current_level == LEVELS_AMOUNT) {
-                std::cout << "-----+++ CONGRATULATIONS! YOU WIN! +++-----" << std::endl;
-                mWindow.close();
-            }
+            nextLevel();
         } else
             processEvents();
     }
+}
+
+// Creating next level
+void MemoryGameProject::nextLevel() {
+    display_path = !display_path;
+    step_idx = 0;
+    current_level++;
+    addStepPath();
+    sf::sleep(sf::seconds(2.0));
 }
 
 // Render game step
@@ -190,9 +201,8 @@ void MemoryGameProject::playSound(int block) {
 }
 
 // Add another step to current game
-void MemoryGameProject::createStepsPath() {
-    for (int i=0; i<LEVELS_AMOUNT; i++)
-        mSteps.push_back(rand() % mBlocks.size());
+void MemoryGameProject::addStepPath() {
+    mSteps.push_back(rand() % mBlocks.size());
 }
 
 // Check what block was clicked
