@@ -54,21 +54,32 @@ sf::Color Block::alterColor(sf::Color color, float factor) {
 Score::Score(float radius, float thickness, sf::Vector2f position) :
 current_level(1),
 color(sf::Color::Cyan),
-render_path_color(sf::Color::Magenta)
+render_path_color(sf::Color::Magenta),
+scoreFont()
 {
     score_shape.setRadius(radius);
     score_shape.setFillColor(color);
     score_shape.setOutlineColor(sf::Color::Black);
     score_shape.setOutlineThickness(thickness);
     score_shape.setPosition(position);
+
+    // Create a font and edit score text
+    if (!scoreFont.loadFromFile(FONT_PATH)) {
+        std::cout << "ERROR FONT FILE" << std::endl;
+        exit(1);
+    }
+    scoreText.setFont(scoreFont);
+    scoreText.setString(std::to_string(current_level));
+    scoreText.setCharacterSize(FONT_SIZE);
+    scoreText.setFillColor(sf::Color::Black);
+    scoreText.setStyle(sf::Text::Bold);
+    centerScore();
 }
 
 // Renders the Score object to a given RenderWindow object
 void Score::render(sf::RenderWindow &window) {
     window.draw(score_shape);
-    // std::cout << "YOOOOOOOOO 1" << std::endl;
-    // window.draw(scoreText);
-    // std::cout << "YOOOOOOOOO 2" << std::endl;
+    window.draw(scoreText);
 }
 
 // Changes score circle fill color depending on event case
@@ -83,10 +94,22 @@ void Score::toggleScoreColor(bool render_path_state) {
 void Score::updateScore() {
     current_level++;
     scoreText.setString(std::to_string(current_level));
+
+    const std::vector<int> milestoneLevels = {10, 100, 1000};
+    if (std::find(milestoneLevels.begin(), milestoneLevels.end(), current_level) != milestoneLevels.end()) {
+        centerScore();
+    }
 }
 
 sf::Vector2f Score::getPosition() {
     return score_shape.getPosition();
+}
+
+void Score::centerScore() {
+    // Set the origin of the text to its center
+    sf::FloatRect textRect = scoreText.getLocalBounds();
+    scoreText.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
+    scoreText.setPosition(sf::Vector2f(BLOCK_WIDTH, BLOCK_HEIGHT));
 }
 
 // --- MemoryGameProject ---
@@ -122,22 +145,15 @@ MemoryGameProject::MemoryGameProject() :
 
     // Load sounds
     loadSounds();
-
-    // // Create a font and edit score text
-    // sf::Font font;
-    // if (!font.loadFromFile(FONT_PATH)) {
-    //     std::cout << "ERROR FONT FILE" << std::endl;
-    //     exit(1);
-    // }
-    // score.scoreText.setFont(font);
-    // score.scoreText.setCharacterSize(10);
-    // score.scoreText.setFillColor(sf::Color::Black);
-    // score.scoreText.setStyle(sf::Text::Bold);
-    // score.scoreText.setPosition(score.getPosition() + sf::Vector2f(SCORE_RADIUS - score.scoreText.getGlobalBounds().width / 2.f, SCORE_RADIUS - score.scoreText.getGlobalBounds().height / 2.f));
 }
 
 // Main simualtion loop
 void MemoryGameProject::run() {
+    for (Block& b : mBlocks)
+        b.render(mWindow);
+    score.render(mWindow);
+    mWindow.display();
+    sf::sleep(sf::seconds(3.0));
     while (mWindow.isOpen()) {
         renderPath(); // Update game state and render graphics
     }
@@ -173,7 +189,6 @@ void MemoryGameProject::renderPath() {
         for (int i=0; i<score.current_level; i++)
             renderStep(i);
         display_path = !display_path;
-        std::cout << "Now repeat!" << std::endl;
     } else {
         if (step_idx >= score.current_level) {
             nextLevel();
@@ -238,12 +253,13 @@ void MemoryGameProject::loadSounds() {
             exit(1);
         }
         mSoundBuffers.push_back(buffer); // Store the sound buffer in a vector
-        mSounds.push_back(sf::Sound(mSoundBuffers.back())); // Create the sound from the buffer
+        mSounds.push_back(sf::Sound()); // Create the sound
     }
 }
 
 // Play sound of given block
 void MemoryGameProject::playSound(int block) {
+    mSounds[block].setBuffer(mSoundBuffers[block]);
     mSounds[block].play();
 }
 

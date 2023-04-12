@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <algorithm>
 
-#define FPS_LIMIT 60 // Frames per second limit
+#define FPS_LIMIT 30 // Frames per second limit
 #define WINDOW_WIDTH 700 // Width of the simulation window
 #define WINDOW_HEIGHT 700 // Height of the simulation window
 #define BLOCK_WIDTH WINDOW_WIDTH/2.f // Width of the block
@@ -17,8 +17,9 @@
 #define SCORE_RADIUS WINDOW_WIDTH*0.1f  // Radius of circle behind score
 #define COLOR_CHANGE_FACTOR 3.0f // Factor of color being darker when it is active
 #define PAUSE_TIME 1.0f // Amount of seconds to wait between showing each step path
-#define SOUND_PATH_AND_FILE_NAME "/Sounds/simonSound" // String that indicates folder that contains sounds and first part of sound files name - files must be named as simonSound0.wav ... simonSound3.wav
-#define FONT_PATH "/Fonts/arial.ttf" // String that indicates path for the font file
+#define SOUND_PATH_AND_FILE_NAME "Sounds/simonSound" // String that indicates folder that contains sounds and first part of sound files name - files must be named as simonSound0.wav ... simonSound3.wav
+#define FONT_PATH "myFonts/arial.ttf" // String that indicates path for the font file
+#define FONT_SIZE 60 // Character size of the score text
 
 class Block {
 public:
@@ -37,17 +38,19 @@ private:
 class Score {
 public:
     unsigned int current_level;
-    sf::Text scoreText;
     Score(float radius, float thickness, sf::Vector2f position);
     void render(sf::RenderWindow& window);
     void toggleScoreColor(bool render_path_state);
     void updateScore();
     sf::Vector2f getPosition();
+    void centerScore();
 
 private:
     sf::CircleShape score_shape;
     sf::Color color;
     sf::Color render_path_color;
+    sf::Text scoreText;
+    sf::Font scoreFont;
 };
 
 class MemoryGameProject {
