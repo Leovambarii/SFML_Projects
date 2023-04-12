@@ -22,23 +22,10 @@ void Block::render(sf::RenderWindow &window) {
 
 // Toggle color to active/inactive
 void Block::toggleBlockColor() {
-    sf::Color currentColor = block_shape.getFillColor();
-    if (currentColor == color) {
+    if (block_shape.getFillColor() == color)
         block_shape.setFillColor(active_color);
-        sf::Color active_color = block_shape.getFillColor();
-        float r = static_cast<float>(active_color.r);
-        float g = static_cast<float>(active_color.g);
-        float b = static_cast<float>(active_color.b);
-        std::cout << "active color:" << ' ' << r << ' '<< g << ' ' << b << std::endl;
-    }
-    else if (currentColor == active_color) {
+    else
         block_shape.setFillColor(color);
-        sf::Color inactive_color = block_shape.getFillColor();
-        float r = static_cast<float>(inactive_color.r);
-        float g = static_cast<float>(inactive_color.g);
-        float b = static_cast<float>(inactive_color.b);
-        std::cout << "normal color:" << ' ' << r << ' '<< g << ' ' << b << std::endl;
-    }
 }
 
 // Function for creating a similar color with altered brightness
@@ -93,9 +80,8 @@ MemoryGameProject::MemoryGameProject() :
     // Generate all steps for the game
     createStepsPath();
 
-    for (auto &x : mSteps)
-        std::cout << x << " ";
-    std::cout << std::endl;
+    // Load sounds
+    loadSounds();
 }
 
 // Main simualtion loop
@@ -116,6 +102,7 @@ void MemoryGameProject::processEvents() {
         else if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left && !display_path) { // If user clicks the left button on mouse
             sf::Vector2i mousePosition = sf::Mouse::getPosition(mWindow); // Get mouse position relative to the window
             int clickedBlock = checkClick(mousePosition); // Check what block was clicked
+            playSound(clickedBlock);
             // Check whether correct block was clicked
             if (isCorrectBlock(clickedBlock))
                 step_idx++;
@@ -135,11 +122,12 @@ void MemoryGameProject::renderPath() {
         display_path = !display_path;
         std::cout << "Now repeat!" << std::endl;
     } else {
-        // renderBlocks();
         if (step_idx >= current_level) {
+
             display_path = !display_path;
             step_idx = 0;
             current_level++;
+            sf::sleep(sf::seconds(2.0));
             if (current_level == LEVELS_AMOUNT) {
                 std::cout << "-----+++ CONGRATULATIONS! YOU WIN! +++-----" << std::endl;
                 mWindow.close();
@@ -156,6 +144,7 @@ void MemoryGameProject::renderStep(int step) {
     for (Block& b : mBlocks)
         b.render(mWindow);
     mWindow.display();
+    playSound(mSteps[step]);
     // Pause for given time before rendering the next frame during path display
     sf::sleep(sf::seconds(PAUSE_TIME));
     mWindow.clear();
@@ -179,6 +168,25 @@ void MemoryGameProject::createBlocks() {
     mBlocks.push_back(Block(sf::Vector2f(a-OUTLINE_THICKNESS, b-OUTLINE_THICKNESS), sf::Color::Yellow, OUTLINE_THICKNESS, sf::Vector2f(OUTLINE_THICKNESS, b+2*OUTLINE_THICKNESS)));
     // Bottom right block
     mBlocks.push_back(Block(sf::Vector2f(a, b-OUTLINE_THICKNESS), sf::Color::Blue, OUTLINE_THICKNESS, sf::Vector2f(a+OUTLINE_THICKNESS, b+2*OUTLINE_THICKNESS)));
+}
+
+// Load sound samples from Sounds folder
+void MemoryGameProject::loadSounds() {
+    for (int i=0; i<mBlocks.size(); i++) {
+        std::string filename = "Sounds/simonSound" + std::to_string(i) + ".wav";
+        sf::SoundBuffer buffer;
+        if (!buffer.loadFromFile(filename)) {
+            std::cout << "ERROR SOUND FILE" << std::endl;
+            exit(1);
+        }
+        mSounds.push_back(buffer);
+    }
+}
+
+// Play sound of given block
+void MemoryGameProject::playSound(int block) {
+    sound.setBuffer(mSounds[block]);
+    sound.play();
 }
 
 // Add another step to current game
