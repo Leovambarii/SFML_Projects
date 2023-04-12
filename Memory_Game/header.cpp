@@ -66,9 +66,9 @@ render_path_color(sf::Color::Magenta)
 // Renders the Score object to a given RenderWindow object
 void Score::render(sf::RenderWindow &window) {
     window.draw(score_shape);
-    std::cout << "YOOOOOOOOO 1" << std::endl;
-    window.draw(scoreText);
-    std::cout << "YOOOOOOOOO 2" << std::endl;
+    // std::cout << "YOOOOOOOOO 1" << std::endl;
+    // window.draw(scoreText);
+    // std::cout << "YOOOOOOOOO 2" << std::endl;
 }
 
 // Changes score circle fill color depending on event case
@@ -123,19 +123,17 @@ MemoryGameProject::MemoryGameProject() :
     // Load sounds
     loadSounds();
 
-    // Create a font and edit score text
-    sf::Font font;
-    if (!font.loadFromFile(FONT_PATH)) {
-        std::cout << "ERROR FONT FILE" << std::endl;
-        exit(1);
-    }
-
-    score.scoreText.setFont(font);
-    score.scoreText.setCharacterSize(10);
-    score.scoreText.setFillColor(sf::Color::Black);
-    score.scoreText.setStyle(sf::Text::Bold);
-    score.scoreText.setPosition(score.getPosition() + sf::Vector2f(SCORE_RADIUS - score.scoreText.getGlobalBounds().width / 2.f, SCORE_RADIUS - score.scoreText.getGlobalBounds().height / 2.f));
-
+    // // Create a font and edit score text
+    // sf::Font font;
+    // if (!font.loadFromFile(FONT_PATH)) {
+    //     std::cout << "ERROR FONT FILE" << std::endl;
+    //     exit(1);
+    // }
+    // score.scoreText.setFont(font);
+    // score.scoreText.setCharacterSize(10);
+    // score.scoreText.setFillColor(sf::Color::Black);
+    // score.scoreText.setStyle(sf::Text::Bold);
+    // score.scoreText.setPosition(score.getPosition() + sf::Vector2f(SCORE_RADIUS - score.scoreText.getGlobalBounds().width / 2.f, SCORE_RADIUS - score.scoreText.getGlobalBounds().height / 2.f));
 }
 
 // Main simualtion loop
@@ -232,7 +230,7 @@ void MemoryGameProject::createBlocks() {
 
 // Load sound samples from Sounds folder
 void MemoryGameProject::loadSounds() {
-    for (int i = 0; i < mBlocks.size(); i++) {
+    for (int i=0; i < mBlocks.size(); i++) {
         std::string filename = "Sounds/simonSound" + std::to_string(i) + ".wav";
         sf::SoundBuffer buffer;
         if (!buffer.loadFromFile(filename)) {

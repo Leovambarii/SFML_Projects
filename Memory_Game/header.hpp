@@ -18,7 +18,7 @@
 #define COLOR_CHANGE_FACTOR 3.0f // Factor of color being darker when it is active
 #define PAUSE_TIME 1.0f // Amount of seconds to wait between showing each step path
 #define SOUND_PATH_AND_FILE_NAME "/Sounds/simonSound" // String that indicates folder that contains sounds and first part of sound files name - files must be named as simonSound0.wav ... simonSound3.wav
-#define FONT_PATH "/Fonts/Arial.ttf" // String that indicates path for the font file
+#define FONT_PATH "/Fonts/arial.ttf" // String that indicates path for the font file
 
 class Block {
 public:
