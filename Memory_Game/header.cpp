@@ -49,15 +49,55 @@ sf::Color Block::alterColor(sf::Color color, float factor) {
     return sf::Color(static_cast<sf::Uint8>(red), static_cast<sf::Uint8>(green), static_cast<sf::Uint8>(blue), color.a);
 }
 
+// --- Score ---
+
+Score::Score(float radius, float thickness, sf::Vector2f position) :
+current_level(1),
+color(sf::Color::Cyan),
+render_path_color(sf::Color::Magenta)
+{
+    score_shape.setRadius(radius);
+    score_shape.setFillColor(color);
+    score_shape.setOutlineColor(sf::Color::Black);
+    score_shape.setOutlineThickness(thickness);
+    score_shape.setPosition(position);
+}
+
+// Renders the Score object to a given RenderWindow object
+void Score::render(sf::RenderWindow &window) {
+    window.draw(score_shape);
+    std::cout << "YOOOOOOOOO 1" << std::endl;
+    window.draw(scoreText);
+    std::cout << "YOOOOOOOOO 2" << std::endl;
+}
+
+// Changes score circle fill color depending on event case
+void Score::toggleScoreColor(bool render_path_state) {
+    if (render_path_state)
+        score_shape.setFillColor(render_path_color);
+    else
+        score_shape.setFillColor(color);
+}
+
+// Update score level
+void Score::updateScore() {
+    current_level++;
+    scoreText.setString(std::to_string(current_level));
+}
+
+sf::Vector2f Score::getPosition() {
+    return score_shape.getPosition();
+}
+
 // --- MemoryGameProject ---
 
 // Constructor for MemoryGameProject class
 MemoryGameProject::MemoryGameProject() :
     // Initialize window with specified width, height, and title
     mWindow(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "MEMORY GAME", sf::Style::Titlebar | sf::Style::Close),
-    current_level(1),
     step_idx(0),
-    display_path(true)
+    display_path(true),
+    score(SCORE_RADIUS, OUTLINE_THICKNESS, sf::Vector2f(BLOCK_WIDTH-SCORE_RADIUS, BLOCK_HEIGHT-SCORE_RADIUS))
 {
     // Set the maximum framerate of the window
     mWindow.setFramerateLimit(FPS_LIMIT);
@@ -82,16 +122,20 @@ MemoryGameProject::MemoryGameProject() :
 
     // Load sounds
     loadSounds();
-}
 
-// Destructor for MemoryGameProject class
-MemoryGameProject::~MemoryGameProject() {
-    // Free all dynamically allocated resources
-    // None
-    // Free sounds
-    for (auto& sound : mSounds) {
-        sound.~SoundBuffer();
+    // Create a font and edit score text
+    sf::Font font;
+    if (!font.loadFromFile(FONT_PATH)) {
+        std::cout << "ERROR FONT FILE" << std::endl;
+        exit(1);
     }
+
+    score.scoreText.setFont(font);
+    score.scoreText.setCharacterSize(10);
+    score.scoreText.setFillColor(sf::Color::Black);
+    score.scoreText.setStyle(sf::Text::Bold);
+    score.scoreText.setPosition(score.getPosition() + sf::Vector2f(SCORE_RADIUS - score.scoreText.getGlobalBounds().width / 2.f, SCORE_RADIUS - score.scoreText.getGlobalBounds().height / 2.f));
+
 }
 
 // Main simualtion loop
@@ -127,12 +171,13 @@ void MemoryGameProject::processEvents() {
 // Update game state and render graphics
 void MemoryGameProject::renderPath() {
     if (display_path) {
-        for (int i=0; i<current_level; i++)
+        score.toggleScoreColor(true);
+        for (int i=0; i<score.current_level; i++)
             renderStep(i);
         display_path = !display_path;
         std::cout << "Now repeat!" << std::endl;
     } else {
-        if (step_idx >= current_level) {
+        if (step_idx >= score.current_level) {
             nextLevel();
         } else
             processEvents();
@@ -143,7 +188,7 @@ void MemoryGameProject::renderPath() {
 void MemoryGameProject::nextLevel() {
     display_path = !display_path;
     step_idx = 0;
-    current_level++;
+    score.updateScore();
     addStepPath();
     sf::sleep(sf::seconds(2.0));
 }
@@ -154,6 +199,7 @@ void MemoryGameProject::renderStep(int step) {
     mBlocks[mSteps[step]].toggleBlockColor();
     for (Block& b : mBlocks)
         b.render(mWindow);
+    score.render(mWindow);
     mWindow.display();
     playSound(mSteps[step]);
     // Pause for given time before rendering the next frame during path display
@@ -162,6 +208,9 @@ void MemoryGameProject::renderStep(int step) {
     mBlocks[mSteps[step]].toggleBlockColor();
     for (Block& b : mBlocks)
         b.render(mWindow);
+    if (step+1 == score.current_level)
+        score.toggleScoreColor(false);
+    score.render(mWindow);
     mWindow.display();
     sf::sleep(sf::seconds(0.2f));
 }
@@ -183,21 +232,21 @@ void MemoryGameProject::createBlocks() {
 
 // Load sound samples from Sounds folder
 void MemoryGameProject::loadSounds() {
-    for (int i=0; i<mBlocks.size(); i++) {
+    for (int i = 0; i < mBlocks.size(); i++) {
         std::string filename = "Sounds/simonSound" + std::to_string(i) + ".wav";
         sf::SoundBuffer buffer;
         if (!buffer.loadFromFile(filename)) {
             std::cout << "ERROR SOUND FILE" << std::endl;
             exit(1);
         }
-        mSounds.push_back(buffer);
+        mSoundBuffers.push_back(buffer); // Store the sound buffer in a vector
+        mSounds.push_back(sf::Sound(mSoundBuffers.back())); // Create the sound from the buffer
     }
 }
 
 // Play sound of given block
 void MemoryGameProject::playSound(int block) {
-    sound.setBuffer(mSounds[block]);
-    sound.play();
+    mSounds[block].play();
 }
 
 // Add another step to current game
@@ -226,4 +275,3 @@ bool MemoryGameProject::isCorrectBlock(int clickedBlock) {
     else
         return false;
 }
-
