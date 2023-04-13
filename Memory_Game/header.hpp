@@ -47,7 +47,7 @@ public:
      * @brief Renders the block object shape onto the specified render window.
      * @param window The render window to render the block object onto.
      */
-    void render(sf::RenderWindow& window);
+    void render(sf::RenderWindow& window) const;
 
     /**
      * @brief Toggles the color of the block object between its original color and its darker active color.
@@ -65,7 +65,7 @@ private:
      * @param factor The factor of color being darker when it is active.
      * @return sf::Color - The altered color of the block.
      */
-    sf::Color alterColor(sf::Color color, float factor);
+    sf::Color alterColor(sf::Color color, float factor) const;
 };
 
 /**
@@ -87,7 +87,7 @@ public:
      * @brief Renders the block object shape and text score onto the specified render window.
      * @param window The render window to render the score object onto.
      */
-    void render(sf::RenderWindow& window);
+    void render(sf::RenderWindow& window) const;
 
     /**
      * @brief Toggles the color of the score object's depending whether there is currently path rendering or not.
@@ -103,10 +103,17 @@ public:
     void updateScore();
 
     /**
+     * @brief Set text of the score to given string and font size
+     * @param text String to be set for score text
+     * @param font_size Size of the characters for score text
+     */
+    void setText(const std::string text, unsigned int font_size);
+
+    /**
      * @brief Get the position of the Score object shape.
      * @return sf::Vector2f - The position of the score object shape.
      */
-    sf::Vector2f getPosition();
+    sf::Vector2f getPosition() const;
 
     /**
      * @brief Centers the score text on the screen.
@@ -137,6 +144,11 @@ public:
      * Initializes the step index, display path, and score.
      */
     MemoryGameProject();
+
+    /**
+     * @brief Renders starting graphics and awaits for user to press the start button
+     */
+    void awaitStart();
 
     /**
      * @brief Runs the memory game.

@@ -3,20 +3,18 @@
 // This is the implementation of the Block class that is used in the MemoryGameProject.
 
 Block::Block(sf::Vector2f size, sf::Color color, float thickness, sf::Vector2f position) :
-color(color)
+color(color),
+block_shape(size),
+active_color(alterColor(color, COLOR_CHANGE_FACTOR))
 {
     // Initialize the properties of the block shape
-    block_shape.setSize(size);
     block_shape.setFillColor(color);
     block_shape.setOutlineColor(sf::Color::Black);
     block_shape.setOutlineThickness(thickness);
     block_shape.setPosition(position);
-
-    // Compute the new color with altered brightness
-    active_color = alterColor(color, COLOR_CHANGE_FACTOR);
 }
 
-void Block::render(sf::RenderWindow &window) {
+void Block::render(sf::RenderWindow &window) const {
     window.draw(block_shape);
 }
 
@@ -28,7 +26,7 @@ void Block::toggleBlockColor() {
         block_shape.setFillColor(color);
 }
 
-sf::Color Block::alterColor(sf::Color color, float factor) {
+sf::Color Block::alterColor(sf::Color color, float factor) const {
     // Get the RGB values of the color
     float red = static_cast<float>(color.r);
     float green = static_cast<float>(color.g);
@@ -54,10 +52,11 @@ Score::Score(float radius, float thickness, sf::Vector2f position) :
 current_level(1),
 color(sf::Color::Cyan),
 render_path_color(sf::Color::Magenta),
-scoreFont()
+scoreFont(),
+score_shape(radius),
+scoreText()
 {
     // Initialize the properties of the score shape
-    score_shape.setRadius(radius);
     score_shape.setFillColor(color);
     score_shape.setOutlineColor(sf::Color::Black);
     score_shape.setOutlineThickness(thickness);
@@ -71,24 +70,18 @@ scoreFont()
 
     // Initialize the properties of the score text
     scoreText.setFont(scoreFont);
-    scoreText.setString(std::to_string(current_level));
-    scoreText.setCharacterSize(FONT_SIZE);
     scoreText.setFillColor(sf::Color::Black);
     scoreText.setStyle(sf::Text::Bold);
     centerScore();
 }
 
-void Score::render(sf::RenderWindow &window) {
+void Score::render(sf::RenderWindow &window) const {
     window.draw(score_shape);
     window.draw(scoreText);
 }
 
 void Score::toggleScoreColor(bool render_path_state) {
-    // Check if the there is a block path rendered currently
-    if (render_path_state)
-        score_shape.setFillColor(render_path_color);
-    else
-        score_shape.setFillColor(color);
+    score_shape.setFillColor(render_path_state ? render_path_color : color);
 }
 
 void Score::updateScore() {
@@ -101,7 +94,13 @@ void Score::updateScore() {
         centerScore();
 }
 
-sf::Vector2f Score::getPosition() {
+void Score::setText(const std::string text, unsigned int font_size) {
+    scoreText.setString(text);
+    scoreText.setCharacterSize(font_size);
+    centerScore();
+}
+
+sf::Vector2f Score::getPosition() const {
     return score_shape.getPosition();
 }
 
@@ -121,17 +120,13 @@ MemoryGameProject::MemoryGameProject() :
     display_path(true),
     score(SCORE_RADIUS, OUTLINE_THICKNESS, sf::Vector2f(BLOCK_WIDTH-SCORE_RADIUS, BLOCK_HEIGHT-SCORE_RADIUS))
 {
-    // Set the maximum framerate of the window
     mWindow.setFramerateLimit(FPS_LIMIT);
-
-    // get the screen resolution
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 
     // calculate the center position of the screen
     int centerX = (desktop.width - mWindow.getSize().x) / 2;
     int centerY = (desktop.height - mWindow.getSize().y) / 2;
 
-    // set the position of the window to the center of the screen
     mWindow.setPosition(sf::Vector2i(centerX, centerY));
 
     // Seed the random number generator with the current time
@@ -142,13 +137,34 @@ MemoryGameProject::MemoryGameProject() :
     loadSounds();
 }
 
-void MemoryGameProject::run() {
-    // Render initial block and wait a certain amount of time before starting the game
+void MemoryGameProject::awaitStart() {
+    // Render initial block and wait for user to start
     for (Block& b : mBlocks)
         b.render(mWindow);
+
+    // Set informational text
+    score.setText("PRESS SPACE", FONT_SIZE/3.5f);
     score.render(mWindow);
     mWindow.display();
-    sf::sleep(sf::seconds(3.0));
+
+    // Await for start input
+    while (mWindow.isOpen()) {
+        sf::Event event;
+        while (mWindow.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                mWindow.close();
+            else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)
+                mWindow.close();
+            else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) {
+                score.setText(std::to_string(score.current_level), FONT_SIZE);
+                return;
+            }
+        }
+    }
+}
+
+void MemoryGameProject::run() {
+    awaitStart();
     while (mWindow.isOpen()) {
         renderPath();
     }
@@ -268,22 +284,19 @@ void MemoryGameProject::addStepPath() {
 }
 
 int MemoryGameProject::checkClick(sf::Vector2i mousePosition) {
-    int x = mousePosition.x;
-    int y = mousePosition.y;
+    bool isLeft = mousePosition.x < BLOCK_WIDTH;
+    bool isTop = mousePosition.y < BLOCK_HEIGHT;
 
-    if (x < BLOCK_WIDTH && y < BLOCK_HEIGHT)
+    if (isLeft && isTop)
         return 0;
-    else if (x >= BLOCK_WIDTH && y < BLOCK_HEIGHT)
+    else if (!isLeft && isTop)
         return 1;
-    else if (x < BLOCK_WIDTH && y >= BLOCK_HEIGHT)
+    else if (isLeft && !isTop)
         return 2;
     else
         return 3;
 }
 
 bool MemoryGameProject::isCorrectBlock(int clickedBlock) {
-    if (clickedBlock == mSteps[step_idx])
-        return true;
-    else
-        return false;
+    return clickedBlock == mSteps[step_idx];
 }
